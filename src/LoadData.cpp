@@ -134,3 +134,52 @@ svm_problem read_problem(const char *filename, svm_parameter &param)
 	fclose(fp);
 	return prob;
 }
+
+svm_parameter setParameter()
+{
+	struct svm_parameter param;
+	param.svm_type = C_SVC;
+	param.kernel_type = RBF;
+	param.degree = 3;
+	param.gamma = 1 / 13;	// 1/num_features
+	param.coef0 = 0;
+	param.nu = 0.5;
+	param.cache_size = 100;
+	param.C = 1;
+	param.eps = 1e-3;
+	param.p = 0.1;
+	param.shrinking = 1;
+	param.probability = 0;
+	param.nr_weight = 0;
+	param.weight_label = NULL;
+	param.weight = NULL;
+	return param;
+}
+
+const char* checkParameter(svm_problem *prob, svm_parameter *param)
+{
+	const char* check_param_err;
+	check_param_err = svm_check_parameter(prob, param);
+	if (check_param_err)
+	{
+		fprintf(stderr, "ERROR: %s\n", check_param_err);
+	}
+	return check_param_err;
+}
+
+double svmPredicted(svm_model *model, svm_problem &probtest, std::map<unsigned int, double> &badNum)
+{
+	double error = 0;
+	unsigned int num = probtest.l;
+	double index;
+	for (unsigned int i = 0;i != num;++i)
+	{
+		index = svm_predict(model, probtest.x[i]);
+		if (index != probtest.y[i])
+		{
+			error += 1;
+			badNum.insert(std::make_pair(i + 1, index));
+		}
+	}
+	return error / probtest.l;
+}

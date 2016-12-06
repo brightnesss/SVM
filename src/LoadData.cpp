@@ -183,3 +183,133 @@ double svmPredicted(svm_model *model, svm_problem &probtest, std::map<unsigned i
 	}
 	return error / probtest.l;
 }
+
+svm_problem init_svm_problem(std::vector<std::vector<double> > &feature, std::vector<std::vector<double> > &label, svm_parameter &param)
+{
+	svm_problem prob;
+	struct svm_node *x_space;
+	prob.l = feature.size();
+	prob.y = Malloc(double, prob.l);
+	prob.x = Malloc(struct svm_node *, prob.l);
+	std::vector<std::vector<double>>::size_type dim = feature[0].size();
+	x_space = Malloc(struct svm_node, prob.l*(dim+1));
+	for (int i = 0; i < prob.l; ++i)
+	{
+		prob.x[i] = &x_space[i*(dim + 1)];
+		for (int j = 0; j < dim; ++j)
+		{
+			x_space[i*(dim + 1) + j].index = j + 1;
+			x_space[i*(dim + 1) + j].value = feature[i][j];
+		}
+		x_space[i*(dim + 1) + dim].index = -1;
+		prob.y[i] = label[i][0];
+	}
+	if (param.gamma == 0 && dim > 0)
+		param.gamma = 1.0 / dim;
+
+	if (param.kernel_type == PRECOMPUTED)
+		for (int i = 0;i<prob.l;i++)
+		{
+			if (prob.x[i][0].index != 0)
+			{
+				fprintf(stderr, "Wrong input format: first column must be 0:sample_serial_number\n");
+				exit(1);
+			}
+			if ((int)prob.x[i][0].value <= 0 || (int)prob.x[i][0].value > dim)
+			{
+				fprintf(stderr, "Wrong input format: sample_serial_number out of range\n");
+				exit(1);
+			}
+		}
+	return prob;
+}
+
+int load_feature(std::string &filename, std::vector< std::vector<double> > &feature) {
+	std::ifstream infile(filename.c_str(), std::ios_base::in);
+	if (!infile.is_open()) {
+		std::cerr << "error: unable to open input file: " << filename << std::endl;
+		return -1;
+	}
+	std::string line;
+	double num;
+	while (std::getline(infile, line))
+	{
+		std::vector<double> nums;
+		std::istringstream stream(line);
+		while (stream >> num) {
+			nums.push_back(num);
+		}
+		feature.push_back(nums);
+	}
+	infile.close();
+	return 0;
+}
+
+int load_label(std::string &filename, std::vector< std::vector<double> > &label, const std::vector<double>::size_type &num)
+{
+	std::ifstream infile(filename.c_str(), std::ios_base::in);
+	if (!infile.is_open()) {
+		std::cerr << "error: unable to open input file: " << filename << std::endl;
+		return -1;
+	}
+	std::string line;
+	double lab;
+	while (std::getline(infile, line))
+	{
+		std::vector<double> l(num, 0);
+		std::istringstream stream(line);
+		stream >> lab;
+		l[--lab] = 1;
+		label.push_back(l);
+	}
+	return 0;
+}
+
+std::vector< std::vector<double> > normalize_trainFeature(std::vector< std::vector<double> > &feature)
+{
+	std::vector<double>::size_type instance_num = feature.size();
+	std::vector<double>::size_type feature_num = feature[0].size();
+	std::vector< std::vector<double> > temp(feature_num);
+
+	for (std::vector<double>::size_type ins = 0;ins != instance_num;++ins)
+	{
+		for (std::vector<double>::size_type fea = 0;fea != feature_num;++fea)
+		{
+			temp[fea].push_back(feature[ins][fea]);
+		}
+	}
+
+	double min, max;
+
+	for (std::vector<double>::size_type fea = 0;fea != feature_num;++fea)
+	{
+		std::sort(temp[fea].begin(), temp[fea].end());
+		min = *(temp[fea].begin());
+		max = *(temp[fea].rbegin());
+		temp[fea].clear();
+		temp[fea].push_back(min);
+		temp[fea].push_back(max);
+	}
+
+	for (std::vector< std::vector<double> >::iterator iter = feature.begin();iter != feature.end();++iter)
+	{
+		for (std::vector<double>::size_type fea = 0;fea != feature_num;++fea)
+		{
+			(*iter)[fea] = ((*iter)[fea] - *(temp[fea].begin())) / (*(temp[fea].rbegin()) - *(temp[fea].begin()));
+		}
+	}
+	return temp;
+}
+
+void normalize_testFeature(std::vector<std::vector<double>>& feature, std::vector<std::vector<double>>& para)
+{
+	std::vector<double>::size_type feature_num = feature[0].size();
+
+	for (std::vector< std::vector<double> >::iterator iter = feature.begin();iter != feature.end();++iter)
+	{
+		for (std::vector<double>::size_type fea = 0;fea != feature_num;++fea)
+		{
+			(*iter)[fea] = ((*iter)[fea] - *(para[fea].begin())) / (*(para[fea].rbegin()) - *(para[fea].begin()));
+		}
+	}
+}

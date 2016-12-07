@@ -184,7 +184,7 @@ double svmPredicted(svm_model *model, svm_problem &probtest, std::map<unsigned i
 	return error / probtest.l;
 }
 
-svm_problem init_svm_problem(std::vector<std::vector<double> > &feature, std::vector<std::vector<double> > &label, svm_parameter &param)
+svm_problem init_svm_problem(std::vector<std::vector<double> > &feature, std::vector<double> &label, svm_parameter &param)
 {
 	svm_problem prob;
 	struct svm_node *x_space;
@@ -202,7 +202,7 @@ svm_problem init_svm_problem(std::vector<std::vector<double> > &feature, std::ve
 			x_space[i*(dim + 1) + j].value = feature[i][j];
 		}
 		x_space[i*(dim + 1) + dim].index = -1;
-		prob.y[i] = label[i][0];
+		prob.y[i] = label[i];
 	}
 	if (param.gamma == 0 && dim > 0)
 		param.gamma = 1.0 / dim;

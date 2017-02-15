@@ -184,6 +184,19 @@ double svmPredicted(svm_model *model, svm_problem &probtest, std::map<unsigned i
 	return error / probtest.l;
 }
 
+std::vector<double> norateSVMPredicted(svm_model *model, svm_problem &probtest)
+{
+	unsigned int num = probtest.l;
+	std::vector<double> label(num);
+	double index;
+	for (unsigned int i = 0;i != num; ++i)
+	{
+		index = svm_predict(model,probtest.x[i]);
+		label.push_back(index);
+	}
+	return label;
+}
+
 svm_problem init_svm_problem(std::vector<std::vector<double> > &feature, std::vector<double> &label, svm_parameter &param)
 {
 	svm_problem prob;

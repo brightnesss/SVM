@@ -17,10 +17,10 @@ int main()
 	//char *str = "trainData.txt";
 	//char *strtest = "testData.txt";
 	string featureStr, testFeatureStr, labelStr, testLabelStr;
-	featureStr = "E:\\GitHub\\SVM\\data\\train_feature.txt";
-	labelStr = "E:\\GitHub\\SVM\\data\\train_label.txt";
-	testFeatureStr = "E:\\GitHub\\SVM\\data\\test_feature.txt";
-	testLabelStr = "E:\\GitHub\\SVM\\data\\test_label.txt";
+	featureStr = "train_feature.txt";
+	labelStr = "train_label.txt";
+	testFeatureStr = "test_feature.txt";
+	testLabelStr = "test_label.txt";
 	vector<vector<double>> trainFeature, testFeature;
 	vector<double> trainLabel, testLabel;
 	mysvm::load_feature(featureStr, trainFeature);
